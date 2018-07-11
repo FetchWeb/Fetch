@@ -2,21 +2,32 @@
 package main
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 	"os"
+
+	// "runtime/debug"
+
+	// import debug handler
+	"go-webserver/built-in/handlers"
+	"go-webserver/core"
 )
 
+// Page struct for generic pages
 type Page struct {
 	Title string
 	Body  []byte
 }
 
 func main() {
-	// http.HandleFunc("/view/", makeHandler(viewHandler))
-	// http.HandleFunc("/edit/", makeHandler(editHandler))
-	// http.HandleFunc("/save/", makeHandler(saveHandler))
+	router := core.Router{}
+	// router := _router.New()
+
+	// Instead of
+	// http.HandleFunc("/", makeHandler(handlers.Debug))
+
+	// We can write
+	router.RegisterRoute("/", handlers.Debug)
 
 	// Try and get port from environment, set to 3000 as default
 	port := os.Getenv("PORT")
@@ -24,17 +35,6 @@ func main() {
 		port = ":3000"
 	}
 
+	router.SetupRoutes()
 	log.Fatal(http.ListenAndServe(port, nil))
-}
-
-func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	t, err := template.ParseFiles(tmpl + ".html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	err = t.Execute(w, p)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 }
