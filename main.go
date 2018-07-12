@@ -20,8 +20,7 @@ type Page struct {
 }
 
 func main() {
-	router := core.Router{}
-	// router := _router.New()
+	router := *core.NewRouter()
 
 	// Instead of
 	// http.HandleFunc("/", makeHandler(handlers.Debug))

@@ -12,17 +12,17 @@ type Router struct {
 	Register map[string]func(http.ResponseWriter, *http.Request)
 }
 
-// New creates a new instance of the router
-func (router *Router) New() *Router {
+// NewRouter creates a new instance of the router
+func NewRouter() *Router {
 	_router := &Router{}
-	router.Register = make(map[string]func(http.ResponseWriter, *http.Request))
+	_router.Register = make(map[string]func(http.ResponseWriter, *http.Request))
 	return _router
 }
 
 // RegisterRoute registers a route string to a http.HandlerFunc
 func (router *Router) RegisterRoute(route string, h http.HandlerFunc) error {
 	if router.Register == nil {
-		router = router.New()
+		router = NewRouter()
 	}
 
 	_, ok := router.Register[route]
