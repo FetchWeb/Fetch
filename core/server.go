@@ -23,12 +23,6 @@ var (
 type Server struct {
 }
 
-// Response type is a placeholder for http.ResponseWriter
-type Response http.ResponseWriter
-
-// Request type is a placeholder for *http.Request
-type Request *http.Request
-
 // RequestHandler type is a placeholder for http.HandlerFunc
 type RequestHandler func(w Response, r Request)
 
