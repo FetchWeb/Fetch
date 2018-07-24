@@ -10,10 +10,7 @@ type Response struct {
 	http.ResponseWriter
 }
 
-// {
-// 	toJson(i interface{}) error
-// }
-
+// ToJSON writes an interface to screen as JSON
 func (response Response) ToJSON(i interface{}) error {
 	jsonData, err := json.Marshal(i)
 	if err != nil {

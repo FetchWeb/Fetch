@@ -116,30 +116,30 @@ func (router *Router) Options(route string, h RequestHandler) error {
 }
 
 // SetupRoutes takes care of initialising the routes from the register
-func (router *Router) SetupRoutes() {
+func (router *Router) SetupRoutes(mux *http.ServeMux) {
 	for key, value := range router.GetRegister {
 		fmt.Println("Setting up route: " + key)
-		http.HandleFunc(key, makeHandler("GET", value))
+		mux.HandleFunc(key, makeHandler("GET", value))
 	}
 	for key, value := range router.HeadRegister {
 		fmt.Println("Setting up route: " + key)
-		http.HandleFunc(key, makeHandler("HEAD", value))
+		mux.HandleFunc(key, makeHandler("HEAD", value))
 	}
 	for key, value := range router.PostRegister {
 		fmt.Println("Setting up route: " + key)
-		http.HandleFunc(key, makeHandler("POST", value))
+		mux.HandleFunc(key, makeHandler("POST", value))
 	}
 	for key, value := range router.PutRegister {
 		fmt.Println("Setting up route: " + key)
-		http.HandleFunc(key, makeHandler("PUT", value))
+		mux.HandleFunc(key, makeHandler("PUT", value))
 	}
 	for key, value := range router.DeleteRegister {
 		fmt.Println("Setting up route: " + key)
-		http.HandleFunc(key, makeHandler("DELETE", value))
+		mux.HandleFunc(key, makeHandler("DELETE", value))
 	}
 	for key, value := range router.OptionRegister {
 		fmt.Println("Setting up route: " + key)
-		http.HandleFunc(key, makeHandler("OPTION", value))
+		mux.HandleFunc(key, makeHandler("OPTION", value))
 	}
 }
 
@@ -151,6 +151,9 @@ func makeHandler(method string, fn RequestHandler) http.HandlerFunc {
 			http.Error(w, "Not found", http.StatusNotFound)
 			return
 		}
+
+		//
+		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 
 		// Log every request to console
 		// @todo: Add support to log to file (?)
