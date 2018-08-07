@@ -18,18 +18,23 @@ import (
 	"net/http"
 	"os"
 
+	config "github.com/micro/go-config"
+	"github.com/micro/go-config/source/file"
 	"golang.org/x/net/http2"
 	// import debug handler
 )
 
 var (
 	_router *Router
-	_port   string
 	_mux    *http.ServeMux
+	_config interface{}
 )
 
 // Server is the... server
 type Server struct {
+	BaseDir string
+	Port    string
+	Config  interface{}
 }
 
 // TODO: Finish manifest struct
@@ -58,18 +63,37 @@ type RequestHandler func(w Response, r Request)
 func (server *Server) Setup() {
 	_mux = http.NewServeMux()
 	server.SetRouter(NewRouter())
+
+	// Load config
+	if server.BaseDir == "" {
+		server.BaseDir, _ = os.Getwd()
+	}
+
+	configPath := os.Getenv("CONFIG_PATH")
+	if configPath == "" {
+		configPath = "/config.json"
+	}
+
+	_config := config.NewConfig()
+
+	fileSource := file.NewSource(
+		file.WithPath(server.BaseDir + configPath),
+	)
+	_config.Load(fileSource)
+
+	server.Config = _config.Map()
 }
 
 // Start starts the webserver
 func (server *Server) Start() {
 
 	// Try and get port from environment, set to 3000 as default
-	if _port == "" {
-		_port = os.Getenv("PORT")
+	if server.Port == "" {
+		server.Port = os.Getenv("PORT")
 	}
 
-	if _port == "" {
-		_port = "3000"
+	if server.Port == "" {
+		server.Port = "3000"
 	}
 
 	// cwd, err := os.Getwd()
@@ -90,15 +114,15 @@ func (server *Server) Start() {
 	// 	},
 	// }
 	// srv := &http.Server{
-	// 	Addr:         ":" + _port,
+	// 	Addr:         ":" + server.Port,
 	// 	Handler:      _mux,
 	// 	TLSConfig:    cfg,
 	// 	TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 	// }
 
 	srv := &http.Server{
-		Addr:    ":" + _port, // Normally ":443"
-		Handler: _mux,        //http.FileServer(http.Dir("../" + cwd)),
+		Addr:    ":" + server.Port, // Normally ":443"
+		Handler: _mux,              //http.FileServer(http.Dir("../" + cwd)),
 	}
 
 	http2.ConfigureServer(srv, &http2.Server{})
@@ -111,12 +135,13 @@ func (server *Server) Start() {
 
 	// log.Fatal(srv.ListenAndServeTLS("C:/Users/adamb/go/src/go-webserver/server.crt", "C:/Users/adamb/go/src/go-webserver/server.key"))
 
-	// log.Fatal(http.ListenAndServe(":"+_port, nil))
+	// log.Fatal(http.ListenAndServe(":"+server.Port, nil))
 }
 
 // SetRouter sets the current router
 func (server *Server) SetRouter(router *Router) {
 	_router = router
+	_router.Server = server
 }
 
 // GetRouter returns the router
