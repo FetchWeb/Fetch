@@ -8,9 +8,11 @@ import (
 	"time"
 )
 
+// RequestHandler type is a placeholder for http.HandlerFunc
+type RequestHandler func(w Response, r Request)
+
 // Router struct to handle route registration
 type Router struct {
-	Server         *Server
 	GetRegister    map[string]RequestHandler
 	HeadRegister   map[string]RequestHandler
 	PostRegister   map[string]RequestHandler
@@ -120,32 +122,32 @@ func (router *Router) Options(route string, h RequestHandler) error {
 func (router *Router) SetupRoutes(mux *http.ServeMux) {
 	for key, value := range router.GetRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("GET", value, router.Server))
+		mux.HandleFunc(key, makeHandler("GET", value))
 	}
 	for key, value := range router.HeadRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("HEAD", value, router.Server))
+		mux.HandleFunc(key, makeHandler("HEAD", value))
 	}
 	for key, value := range router.PostRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("POST", value, router.Server))
+		mux.HandleFunc(key, makeHandler("POST", value))
 	}
 	for key, value := range router.PutRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("PUT", value, router.Server))
+		mux.HandleFunc(key, makeHandler("PUT", value))
 	}
 	for key, value := range router.DeleteRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("DELETE", value, router.Server))
+		mux.HandleFunc(key, makeHandler("DELETE", value))
 	}
 	for key, value := range router.OptionRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("OPTION", value, router.Server))
+		mux.HandleFunc(key, makeHandler("OPTION", value))
 	}
 }
 
 // makeHander sets up a generic handler function for http
-func makeHandler(method string, fn RequestHandler, server *Server) http.HandlerFunc {
+func makeHandler(method string, fn RequestHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Check that the request method matches the one specified
 		if strings.ToUpper(method) != strings.ToUpper(r.Method) {
@@ -161,9 +163,8 @@ func makeHandler(method string, fn RequestHandler, server *Server) http.HandlerF
 		fmt.Printf("[%s] %s\t%s: %s\n", time.Now().Format("2006-01-02 15:04:05.000000"), r.RemoteAddr, r.Method, r.URL.Path)
 
 		var response = Response{w}
-		var request = Request{R: r}
+		var request = Request{r}
 
-		request.Server = server
 		fn(response, request)
 	}
 }

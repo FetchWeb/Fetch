@@ -1,5 +1,5 @@
-// Package core - core web server code
-package core
+// Package webserver - core web server code
+package webserver
 
 /**
  * A fair chunk of code snippets are from https://golang.org/doc/articles/wiki/
@@ -14,6 +14,7 @@ package core
  */
 
 import (
+	"go-webserver/core"
 	"log"
 	"net/http"
 	"os"
@@ -25,7 +26,7 @@ import (
 )
 
 var (
-	_router *Router
+	_router *core.Router
 	_mux    *http.ServeMux
 	_config interface{}
 )
@@ -56,13 +57,10 @@ type ManifestStruct struct {
 	//   }
 }
 
-// RequestHandler type is a placeholder for http.HandlerFunc
-type RequestHandler func(w Response, r Request)
-
 // Setup sets up defaults
 func (server *Server) Setup() {
 	_mux = http.NewServeMux()
-	server.SetRouter(NewRouter())
+	server.SetRouter(core.NewRouter())
 
 	// Load config
 	if server.BaseDir == "" {
@@ -139,17 +137,17 @@ func (server *Server) Start() {
 }
 
 // SetRouter sets the current router
-func (server *Server) SetRouter(router *Router) {
+func (server *Server) SetRouter(router *core.Router) {
 	_router = router
-	_router.Server = server
+	// _router.Server = server
 }
 
 // GetRouter returns the router
-func (server *Server) GetRouter() *Router {
+func (server *Server) GetRouter() *core.Router {
 	return _router
 }
 
 // TODO: Make manifest struct
-func (server *Server) manifestHandler(w Response, r Request) {
+func (server *Server) manifestHandler(w core.Response, r core.Request) {
 	w.Write([]byte("{\"short_name\": \"Go Webserver\",\"name\": \"\",\"icons\": [{\"src\":\"\",\"sizes\": \"\",\"type\": \"\"}],\"start_url\": \"\",\"background_color\": \"\",\"Theme_color\": \"\",\"display\": \"\"}"))
 }
