@@ -11,7 +11,7 @@ package main
 
 import (
 	"fmt"
-	"go-webserver/core"
+	"fetch/core"
 )
 
 func main() {

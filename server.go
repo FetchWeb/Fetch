@@ -1,5 +1,5 @@
 // Package webserver - core web server code
-package webserver
+package fetch
 
 /**
  * A fair chunk of code snippets are from https://golang.org/doc/articles/wiki/
@@ -14,7 +14,7 @@ package webserver
  */
 
 import (
-	"go-webserver/core"
+	"fetch/core"
 	"log"
 	"net/http"
 	"os"
@@ -22,7 +22,6 @@ import (
 	config "github.com/micro/go-config"
 	"github.com/micro/go-config/source/file"
 	"golang.org/x/net/http2"
-	// import debug handler
 )
 
 var (
@@ -91,7 +90,7 @@ func (server *Server) Start() {
 	}
 
 	if server.Port == "" {
-		server.Port = "3000"
+		server.Port = "443"
 	}
 
 	// cwd, err := os.Getwd()
@@ -128,10 +127,8 @@ func (server *Server) Start() {
 	server.GetRouter().Get("/manifest.json", server.manifestHandler)
 	server.GetRouter().SetupRoutes(_mux)
 
-	// TODO: Enable configuration of server keys
-	log.Fatal(srv.ListenAndServeTLS("C:/Users/adamb/go/src/go-webserver/server.crt", "C:/Users/adamb/go/src/go-webserver/server.key"))
-
-	// log.Fatal(srv.ListenAndServeTLS("C:/Users/adamb/go/src/go-webserver/server.crt", "C:/Users/adamb/go/src/go-webserver/server.key"))
+	// TODO: Add support for custom SSL cert directory
+	log.Fatal(srv.ListenAndServeTLS(server.BaseDir+"/server.crt", server.BaseDir+"/server.key"))
 
 	// log.Fatal(http.ListenAndServe(":"+server.Port, nil))
 }
@@ -149,5 +146,5 @@ func (server *Server) GetRouter() *core.Router {
 
 // TODO: Make manifest struct
 func (server *Server) manifestHandler(w core.Response, r core.Request) {
-	w.Write([]byte("{\"short_name\": \"Go Webserver\",\"name\": \"\",\"icons\": [{\"src\":\"\",\"sizes\": \"\",\"type\": \"\"}],\"start_url\": \"\",\"background_color\": \"\",\"Theme_color\": \"\",\"display\": \"\"}"))
+	w.Write([]byte("{\"short_name\": \"Fetch\",\"name\": \"\",\"icons\": [{\"src\":\"\",\"sizes\": \"\",\"type\": \"\"}],\"start_url\": \"\",\"background_color\": \"\",\"Theme_color\": \"\",\"display\": \"\"}"))
 }

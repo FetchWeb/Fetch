@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"go-webserver"
+	"fetch"
 	"os"
 	"testing"
 )
