@@ -14,10 +14,11 @@ package fetch
  */
 
 import (
-	"fetch/core"
 	"log"
 	"net/http"
 	"os"
+
+	"bitbucket.org/abuckley90/fetch/core"
 
 	config "github.com/micro/go-config"
 	"github.com/micro/go-config/source/file"
