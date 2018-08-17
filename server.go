@@ -14,7 +14,6 @@ package fetch
  */
 
 import (
-	"fetch/core"
 	"log"
 	"net/http"
 	"os"
