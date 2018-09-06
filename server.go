@@ -18,15 +18,13 @@ import (
 	"net/http"
 	"os"
 
-	"bitbucket.org/abuckley90/fetch/core"
-
 	config "github.com/micro/go-config"
 	"github.com/micro/go-config/source/file"
 	"golang.org/x/net/http2"
 )
 
 var (
-	_router *core.Router
+	_router *Router
 	_mux    *http.ServeMux
 	_config interface{}
 )
@@ -60,7 +58,7 @@ type ManifestStruct struct {
 // Setup sets up defaults
 func (server *Server) Setup() {
 	_mux = http.NewServeMux()
-	server.SetRouter(core.NewRouter())
+	server.SetRouter(NewRouter())
 
 	// Load config
 	if server.BaseDir == "" {
@@ -135,17 +133,17 @@ func (server *Server) Start() {
 }
 
 // SetRouter sets the current router
-func (server *Server) SetRouter(router *core.Router) {
+func (server *Server) SetRouter(router *Router) {
 	_router = router
 	// _router.Server = server
 }
 
 // GetRouter returns the router
-func (server *Server) GetRouter() *core.Router {
+func (server *Server) GetRouter() *Router {
 	return _router
 }
 
 // TODO: Make manifest struct
-func (server *Server) manifestHandler(w core.Response, r core.Request) {
+func (server *Server) manifestHandler(w Response, r Request) {
 	w.Write([]byte("{\"short_name\": \"Fetch\",\"name\": \"\",\"icons\": [{\"src\":\"\",\"sizes\": \"\",\"type\": \"\"}],\"start_url\": \"\",\"background_color\": \"\",\"Theme_color\": \"\",\"display\": \"\"}"))
 }
