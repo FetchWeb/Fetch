@@ -10,7 +10,7 @@ import (
 type DbObject struct {
 }
 
-func (o *DbObject) All() ([]interface{}, errors) {
+func (o *DbObject) All() ([]interface{}, error) {
 	db, err := sqlx.Connect("mysql", "cmfive:cmfive@/cmfive")
 	if err != nil {
 		log.Fatalln(err)
