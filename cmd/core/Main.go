@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/FetchWeb/Fetch/pkg/core"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {

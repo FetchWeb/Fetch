@@ -6,14 +6,15 @@ import (
 	"log"
 	"net/http"
 
-	_ "github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/bcrypt"
 )
 
+// AuthService handles Authentication within the app.
 type AuthService struct {
 	db *sql.DB
 }
 
+// Startup initializes the AuthService object.
 func (authService *AuthService) Startup() {
 	var err error
 	authService.db, err = sql.Open("mysql", "root:admin@/fetch")
