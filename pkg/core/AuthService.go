@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// AuthService handles Authentication within the app.
+// AuthService handles Authentication and other similar functionality within the package.
 type AuthService struct {
 	db *sql.DB
 }
