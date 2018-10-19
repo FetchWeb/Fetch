@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"io/ioutil"
+
 	"github.com/FetchWeb/Fetch/pkg/email"
 )
 
@@ -10,10 +11,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print(e)
+
+	messageBuf, err := ioutil.ReadFile("../../test/email/TestEmailTemplate.html")
+	if err != nil {
+		panic(err)
+	}
 
 	var mailService email.MailService
-	err = mailService.SendEmail(e, []string{"taliesinwrmillhouse@gmail.com"}, "Hello world!")
+	err = mailService.SendEmail(e, []string{"taliesinwrmillhouse@gmail.com"}, string(messageBuf))
 	if err != nil {
 		panic(err)
 	}
