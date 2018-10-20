@@ -17,8 +17,8 @@ func main() {
 		panic(err)
 	}
 
-	var mailService email.MailService
-	err = mailService.SendEmail(e, []string{"taliesinwrmillhouse@gmail.com"}, string(messageBuf))
+	var service email.Service
+	err = service.SendEmail(e, []string{"taliesinwrmillhouse@gmail.com"}, string(messageBuf))
 	if err != nil {
 		panic(err)
 	}
