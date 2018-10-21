@@ -9,6 +9,6 @@ type Service struct {
 }
 
 // SendEmail sends an email with the message to the recipients from the sender.
-func (service *Service) SendEmail(sender *Email, recipients []string, message string) error {
-	return smtp.SendMail(sender.Hostname+":"+sender.Port, smtp.PlainAuth("", sender.Address, sender.Password, sender.Hostname), sender.Address, recipients, []byte(message))
+func (service *Service) SendEmail(c *Credentials, m *Message) error {
+	return smtp.SendMail(c.Hostname+":"+c.Port, smtp.PlainAuth("", c.Address, c.Password, c.Hostname), c.Address, m.Tolist(), m.Bytes())
 }

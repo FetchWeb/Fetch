@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"log"
 	"net/mail"
 	"net/smtp"
@@ -14,24 +15,17 @@ func main() {
 	// 	panic(err)
 	// }
 
-	// // messageBuf, err := ioutil.ReadFile("../../test/email/TestEmailTemplate.html")
-	// // if err != nil {
-	// // 	panic(err)
-	// // }
-
-	// var service email.Service
-	// err = service.SendEmail(e, []string{"taliesinwrmillhouse@gmail.com"}, string("Hello world!"))
-	// if err != nil {
-	// 	panic(err)
-	// }
-
 	// compose the message
-	m := email.NewMessage("Hi", "this is the body")
+	buff, err := ioutil.ReadFile("../../test/email/TestEmailTemplate.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+	m := email.NewHTMLMessage("This is a subject", string(buff))
 	m.From = mail.Address{Name: "From", Address: "from@example.com"}
 	m.To = []string{"taliesinwrmillhouse@gmail.com"}
 
 	// add attachments
-	if err := m.Attach("../../test/email/attachment.jpg", true); err != nil {
+	if err := m.AddAttachment("../../test/email/attachment.jpg", false); err != nil {
 		log.Fatal(err)
 	}
 
@@ -43,4 +37,8 @@ func main() {
 	if err := email.Send("smtp.gmail.com:587", auth, m); err != nil {
 		log.Fatal(err)
 	}
+
+	var creds email.Credentials
+	var emailService email.Service
+	emailService.SendEmail()
 }

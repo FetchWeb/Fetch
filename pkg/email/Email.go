@@ -11,18 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/FetchWeb/Fetch/pkg/core"
 )
-
-// Email stores the relevant data to send emails.
-type Email struct {
-	core.DBObject
-	Hostname string `json:"hostname"`
-	Port     string `json:"port"`
-	Address  string `json:"address"`
-	Password string `json:"password"`
-}
 
 // Attachment represents an email attachment.
 type Attachment struct {
@@ -51,32 +40,7 @@ type Message struct {
 	Attachments     map[string]*Attachment
 }
 
-// // NewEmail is a helper functon to create a new email.
-// func NewEmail(host string, port string, addr string, pass string) *Email {
-// 	var e *Email
-// 	e.Hostname = host
-// 	e.Port = port
-// 	e.Address = addr
-// 	e.Password = pass
-// 	return e
-// }
-
-// // LoadFromConfig is a helper function to load the email from a config file.
-// func LoadFromConfig(configDir string) (*Email, error) {
-// 	err := config.Load(file.NewSource(file.WithPath(configDir)))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	var e *Email
-// 	err = config.Scan(&e)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return e, nil
-// }
-
-func (m *Message) Attach(file string, inline bool) error {
+func (m *Message) AddAttachment(file string, inline bool) error {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
@@ -93,11 +57,6 @@ func (m *Message) Attach(file string, inline bool) error {
 	return nil
 }
 
-// // Attach attaches a file.
-// func (m *Message) Attach(file string) error {
-// 	return m.attach(file, false)
-// }
-
 // AttachBuffer attaches a binary attachment.
 func (m *Message) AttachBuffer(filename string, buf []byte, inline bool) error {
 	m.Attachments[filename] = &Attachment{
@@ -108,12 +67,7 @@ func (m *Message) AttachBuffer(filename string, buf []byte, inline bool) error {
 	return nil
 }
 
-// // Inline includes a file as an inline attachment.
-// func (m *Message) Inline(file string) error {
-// 	return m.attach(file, true)
-// }
-
-// Ads a Header to message
+// AddHeader ads a Header to message
 func (m *Message) AddHeader(key string, value string) Header {
 	newHeader := Header{Key: key, Value: value}
 	m.Headers = append(m.Headers, newHeader)
@@ -128,8 +82,8 @@ func newMessage(subject string, body string, bodyContentType string) *Message {
 	return m
 }
 
-// NewMessage returns a new Message that can compose an email with attachments
-func NewMessage(subject string, body string) *Message {
+// NewPlainTextMessage returns a new Message that can compose an email with attachments
+func NewPlainTextMessage(subject string, body string) *Message {
 	return newMessage(subject, body, "text/plain")
 }
 
@@ -157,68 +111,68 @@ func (m *Message) Tolist() []string {
 func (m *Message) Bytes() []byte {
 	buf := bytes.NewBuffer(nil)
 
-	buf.WriteString("From: " + m.From.String() + "\r\n")
+	buf.WriteString("From: " + m.From.String() + "\n")
 
 	t := time.Now()
-	buf.WriteString("Date: " + t.Format(time.RFC1123Z) + "\r\n")
+	buf.WriteString("Date: " + t.Format(time.RFC1123Z) + "\n")
 
-	buf.WriteString("To: " + strings.Join(m.To, ",") + "\r\n")
+	buf.WriteString("To: " + strings.Join(m.To, ",") + "\n")
 	if len(m.Cc) > 0 {
-		buf.WriteString("Cc: " + strings.Join(m.Cc, ",") + "\r\n")
+		buf.WriteString("Cc: " + strings.Join(m.Cc, ",") + "\n")
 	}
 
 	//fix  Encode
 	var coder = base64.StdEncoding
 	var subject = "=?UTF-8?B?" + coder.EncodeToString([]byte(m.Subject)) + "?="
-	buf.WriteString("Subject: " + subject + "\r\n")
+	buf.WriteString("Subject: " + subject + "\n")
 
 	if len(m.ReplyTo) > 0 {
-		buf.WriteString("Reply-To: " + m.ReplyTo + "\r\n")
+		buf.WriteString("Reply-To: " + m.ReplyTo + "\n")
 	}
 
-	buf.WriteString("MIME-Version: 1.0\r\n")
+	buf.WriteString("MIME-Version: 1.0\n")
 
 	// Add custom headers
 	if len(m.Headers) > 0 {
 		for _, header := range m.Headers {
-			buf.WriteString(fmt.Sprintf("%s: %s\r\n", header.Key, header.Value))
+			buf.WriteString(fmt.Sprintf("%s: %s\n", header.Key, header.Value))
 		}
 	}
 
 	boundary := "f46d043c813270fc6b04c2d223da"
 
 	if len(m.Attachments) > 0 {
-		buf.WriteString("Content-Type: multipart/mixed; boundary=" + boundary + "\r\n")
-		buf.WriteString("\r\n--" + boundary + "\r\n")
+		buf.WriteString("Content-Type: multipart/mixed; boundary=" + boundary + "\n")
+		buf.WriteString("\n--" + boundary + "\n")
 	}
 
-	buf.WriteString(fmt.Sprintf("Content-Type: %s; charset=utf-8\r\n\r\n", m.BodyContentType))
+	buf.WriteString(fmt.Sprintf("Content-Type: %s; charset=utf-8\n\n", m.BodyContentType))
 	buf.WriteString(m.Body)
-	buf.WriteString("\r\n")
+	buf.WriteString("\n")
 
 	if len(m.Attachments) > 0 {
 		for _, attachment := range m.Attachments {
-			buf.WriteString("\r\n\r\n--" + boundary + "\r\n")
+			buf.WriteString("\n\n--" + boundary + "\n")
 
 			if attachment.Inline {
-				buf.WriteString("Content-Type: message/rfc822\r\n")
-				buf.WriteString("Content-Disposition: inline; filename=\"" + attachment.Filename + "\"\r\n\r\n")
+				buf.WriteString("Content-Type: message/rfc822\n")
+				buf.WriteString("Content-Disposition: inline; filename=\"" + attachment.Filename + "\"\n\n")
 
 				buf.Write(attachment.Data)
 			} else {
 				ext := filepath.Ext(attachment.Filename)
 				mimetype := mime.TypeByExtension(ext)
 				if mimetype != "" {
-					mime := fmt.Sprintf("Content-Type: %s\r\n", mimetype)
+					mime := fmt.Sprintf("Content-Type: %s\n", mimetype)
 					buf.WriteString(mime)
 				} else {
-					buf.WriteString("Content-Type: application/octet-stream\r\n")
+					buf.WriteString("Content-Type: application/octet-stream\n")
 				}
-				buf.WriteString("Content-Transfer-Encoding: base64\r\n")
+				buf.WriteString("Content-Transfer-Encoding: base64\n")
 
 				buf.WriteString("Content-Disposition: attachment; filename=\"=?UTF-8?B?")
 				buf.WriteString(coder.EncodeToString([]byte(attachment.Filename)))
-				buf.WriteString("?=\"\r\n\r\n")
+				buf.WriteString("?=\"\n\n")
 
 				b := make([]byte, base64.StdEncoding.EncodedLen(len(attachment.Data)))
 				base64.StdEncoding.Encode(b, attachment.Data)
@@ -227,12 +181,12 @@ func (m *Message) Bytes() []byte {
 				for i, l := 0, len(b); i < l; i++ {
 					buf.WriteByte(b[i])
 					if (i+1)%76 == 0 {
-						buf.WriteString("\r\n")
+						buf.WriteString("\n")
 					}
 				}
 			}
 
-			buf.WriteString("\r\n--" + boundary)
+			buf.WriteString("\n--" + boundary)
 		}
 
 		buf.WriteString("--")
