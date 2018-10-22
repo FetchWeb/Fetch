@@ -13,19 +13,6 @@ import (
 	"time"
 )
 
-// Attachment represents an email attachment.
-type Attachment struct {
-	Filename string
-	Data     []byte
-	Inline   bool
-}
-
-// Header represents an additional email header.
-type Header struct {
-	Key   string
-	Value string
-}
-
 // Message represents a smtp message.
 type Message struct {
 	From            mail.Address
@@ -38,6 +25,20 @@ type Message struct {
 	BodyContentType string
 	Headers         []Header
 	Attachments     map[string]*Attachment
+}
+
+// NewPlainTextMessage returns a new Message that can compose an email with attachments
+func NewPlainTextMessage(subject string, body string) *Message {
+	m := &Message{Subject: subject, Body: body, BodyContentType: "text/plain"}
+	m.Attachments = make(map[string]*Attachment)
+	return m
+}
+
+// NewHTMLMessage returns a new Message that can compose an HTML email with attachments
+func NewHTMLMessage(subject string, body string) *Message {
+	m := &Message{Subject: subject, Body: body, BodyContentType: "text/html"}
+	m.Attachments = make(map[string]*Attachment)
+	return m
 }
 
 func (m *Message) AddAttachment(file string, inline bool) error {
@@ -74,37 +75,19 @@ func (m *Message) AddHeader(key string, value string) Header {
 	return newHeader
 }
 
-func newMessage(subject string, body string, bodyContentType string) *Message {
-	m := &Message{Subject: subject, Body: body, BodyContentType: bodyContentType}
-
-	m.Attachments = make(map[string]*Attachment)
-
-	return m
-}
-
-// NewPlainTextMessage returns a new Message that can compose an email with attachments
-func NewPlainTextMessage(subject string, body string) *Message {
-	return newMessage(subject, body, "text/plain")
-}
-
-// NewHTMLMessage returns a new Message that can compose an HTML email with attachments
-func NewHTMLMessage(subject string, body string) *Message {
-	return newMessage(subject, body, "text/html")
-}
-
 // Tolist returns all the recipients of the email
-func (m *Message) Tolist() []string {
-	tolist := m.To
+func (m *Message) GetRecipients() []string {
+	recipients := m.To
 
 	for _, cc := range m.Cc {
-		tolist = append(tolist, cc)
+		recipients = append(recipients, cc)
 	}
 
 	for _, bcc := range m.Bcc {
-		tolist = append(tolist, bcc)
+		recipients = append(recipients, bcc)
 	}
 
-	return tolist
+	return recipients
 }
 
 // Bytes returns the mail data
@@ -197,5 +180,5 @@ func (m *Message) Bytes() []byte {
 
 // Send sends the message.
 func Send(addr string, auth smtp.Auth, m *Message) error {
-	return smtp.SendMail(addr, auth, m.From.Address, m.Tolist(), m.Bytes())
+	return smtp.SendMail(addr, auth, m.From.Address, m.GetRecipients(), m.Bytes())
 }

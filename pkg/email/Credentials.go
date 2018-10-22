@@ -9,17 +9,19 @@ import (
 // Credentials stores the relevant credenial data to send emails.
 type Credentials struct {
 	core.DBObject
-	Hostname string `json:"hostname"`
-	Port     string `json:"port"`
 	Address  string `json:"address"`
+	Hostname string `json:"hostname"`
+	Name     string `json:"name"`
+	Port     string `json:"port"`
 	Password string `json:"password"`
 }
 
-func NewCredentials(host string, port string, addr string, pass string) *Credentials {
+func NewCredentials(addr string, host string, name string, port string, pass string) *Credentials {
 	var c *Credentials
-	c.Hostname = host
-	c.Port = port
 	c.Address = addr
+	c.Hostname = host
+	c.Name = name
+	c.Port = port
 	c.Password = pass
 	return c
 }
