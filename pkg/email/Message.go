@@ -41,6 +41,7 @@ func NewHTMLMessage(subject string, body string) *Message {
 	return m
 }
 
+// AddAttachment adds a new attachment to the message.
 func (m *Message) AddAttachment(file string, inline bool) error {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -75,7 +76,7 @@ func (m *Message) AddHeader(key string, value string) Header {
 	return newHeader
 }
 
-// Tolist returns all the recipients of the email
+// GetRecipients returns all the recipients of the message.
 func (m *Message) GetRecipients() []string {
 	recipients := m.To
 
@@ -90,21 +91,20 @@ func (m *Message) GetRecipients() []string {
 	return recipients
 }
 
-// Bytes returns the mail data
-func (m *Message) Bytes() []byte {
+// Data returns all the message data as a byte array.
+func (m *Message) Data() []byte {
 	buf := bytes.NewBuffer(nil)
 
+	// Write from and recipients.
 	buf.WriteString("From: " + m.From.String() + "\n")
-
 	t := time.Now()
 	buf.WriteString("Date: " + t.Format(time.RFC1123Z) + "\n")
-
 	buf.WriteString("To: " + strings.Join(m.To, ",") + "\n")
 	if len(m.Cc) > 0 {
 		buf.WriteString("Cc: " + strings.Join(m.Cc, ",") + "\n")
 	}
 
-	//fix  Encode
+	// Write encoding.
 	var coder = base64.StdEncoding
 	var subject = "=?UTF-8?B?" + coder.EncodeToString([]byte(m.Subject)) + "?="
 	buf.WriteString("Subject: " + subject + "\n")
@@ -115,20 +115,21 @@ func (m *Message) Bytes() []byte {
 
 	buf.WriteString("MIME-Version: 1.0\n")
 
-	// Add custom headers
+	// Write headers.
 	if len(m.Headers) > 0 {
 		for _, header := range m.Headers {
 			buf.WriteString(fmt.Sprintf("%s: %s\n", header.Key, header.Value))
 		}
 	}
 
+	// Write attachments.
 	boundary := "f46d043c813270fc6b04c2d223da"
-
 	if len(m.Attachments) > 0 {
 		buf.WriteString("Content-Type: multipart/mixed; boundary=" + boundary + "\n")
 		buf.WriteString("\n--" + boundary + "\n")
 	}
 
+	// Write content type.
 	buf.WriteString(fmt.Sprintf("Content-Type: %s; charset=utf-8\n\n", m.BodyContentType))
 	buf.WriteString(m.Body)
 	buf.WriteString("\n")
@@ -160,7 +161,6 @@ func (m *Message) Bytes() []byte {
 				b := make([]byte, base64.StdEncoding.EncodedLen(len(attachment.Data)))
 				base64.StdEncoding.Encode(b, attachment.Data)
 
-				// write base64 content in lines of up to 76 chars
 				for i, l := 0, len(b); i < l; i++ {
 					buf.WriteByte(b[i])
 					if (i+1)%76 == 0 {
@@ -180,5 +180,5 @@ func (m *Message) Bytes() []byte {
 
 // Send sends the message.
 func Send(addr string, auth smtp.Auth, m *Message) error {
-	return smtp.SendMail(addr, auth, m.From.Address, m.GetRecipients(), m.Bytes())
+	return smtp.SendMail(addr, auth, m.From.Address, m.GetRecipients(), m.Data())
 }
