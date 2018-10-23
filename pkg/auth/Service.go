@@ -1,4 +1,4 @@
-package core
+package auth
 
 import (
 	"database/sql"
@@ -9,22 +9,22 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// AuthService handles Authentication and other similar functionality within the package.
-type AuthService struct {
+// Service handles Authentication and other similar functionality within the package.
+type Service struct {
 	db *sql.DB
 }
 
-// Startup initializes the AuthService object.
-func (authService *AuthService) Startup() {
+// Startup initializes the Service object.
+func (service *Service) Startup() {
 	var err error
-	authService.db, err = sql.Open("mysql", "root:admin@/fetch")
+	service.db, err = sql.Open("mysql", "root:admin@/fetch")
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 // Signup creates a new user and makes an entry in the database.
-func (authService *AuthService) Signup(w http.ResponseWriter, r *http.Request) {
+func (service *Service) Signup(w http.ResponseWriter, r *http.Request) {
 	user := &User{}
 	err := json.NewDecoder(r.Body).Decode(user)
 	if err != nil {
@@ -32,7 +32,7 @@ func (authService *AuthService) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 8)
 
-	stmt, err := authService.db.Prepare("INSERT INTO users(email, password, username) VALUES(?, ?, ?)")
+	stmt, err := service.db.Prepare("INSERT INTO users(email, password, username) VALUES(?, ?, ?)")
 	if err != nil {
 		log.Print(err)
 	}
@@ -47,7 +47,7 @@ func (authService *AuthService) Signup(w http.ResponseWriter, r *http.Request) {
 }
 
 // Signin compares inputted user credentials against the user database.
-func (authService *AuthService) Signin(w http.ResponseWriter, r *http.Request) {
+func (service *Service) Signin(w http.ResponseWriter, r *http.Request) {
 	user := &User{}
 	err := json.NewDecoder(r.Body).Decode(user)
 	if err != nil {
@@ -55,7 +55,7 @@ func (authService *AuthService) Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := authService.db.QueryRow("SELECT password FROM users WHERE username = ?", user.Username)
+	result := service.db.QueryRow("SELECT password FROM users WHERE username = ?", user.Username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
