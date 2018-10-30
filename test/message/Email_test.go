@@ -1,21 +1,23 @@
-package main
+package message_test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/mail"
+	"testing"
 
 	"github.com/FetchWeb/Fetch/pkg/core"
 	"github.com/FetchWeb/Fetch/pkg/message"
 )
 
-func main() {
+func EmailQueueTest(t *testing.T) {
 	emailCreds, err := message.LoadFromConfig("../../configs/TestEmailConfig.json")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	buff, err := ioutil.ReadFile("../../test/message/TestEmailTemplate.html")
+	buff, err := ioutil.ReadFile("../../test/email/TestEmailTemplate.html")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -26,20 +28,21 @@ func main() {
 		emailData.From = mail.Address{Name: emailCreds.Name, Address: emailCreds.Address}
 		emailData.To = []string{"taliesinwrmillhouse@gmail.com"}
 
-		if err := emailData.AddAttachment("../../test/message/attachment.jpg", false); err != nil {
+		if err := emailData.AddAttachment("../../test/email/attachment.jpg", false); err != nil {
 			log.Fatal(err)
 		}
 
 		email := &message.Email{Data: emailData, Credentials: emailCreds}
+		qi := &core.QItem{Value: email}
 
-		queue.Push(email)
+		queue.Push(qi)
 	}
 
-	var serivce message.Service
-	for i := 0; i > 10; i-- {
+	//var serivce message.Service
+	for i := 0; i < 10; i-- {
 		if queue.CanPop() {
-			email := queue.Pop().(*message.Email)
-			serivce.SendEmail(email.Credentials, email.Data)
+			email := queue.Pop()
+			fmt.Print(email)
 		}
 	}
 }

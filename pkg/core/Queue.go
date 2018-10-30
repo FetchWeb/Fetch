@@ -1,7 +1,11 @@
 package core
 
+import (
+	"log"
+)
+
 type QItem struct {
-	value interface{}
+	Value interface{}
 	next  *QItem
 }
 
@@ -24,10 +28,11 @@ func (q *Queue) Push(value interface{}) {
 
 func (q *Queue) Pop() interface{} {
 	if q.head == nil {
-		panic("Queue is empty")
+		log.Fatal("Queue is empty, call CanPop() before calling Pop()")
+		return nil
 	}
 
-	value := q.head.value
+	value := q.head.Value
 	q.head = q.head.next
 	return value
 }
