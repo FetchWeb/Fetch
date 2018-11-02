@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/mail"
+	"sync"
 
 	"github.com/FetchWeb/Fetch/pkg/core"
 	"github.com/FetchWeb/Fetch/pkg/message"
@@ -21,7 +22,7 @@ func main() {
 	}
 
 	var queue core.Queue
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 3; i++ {
 		emailData := message.NewHTMLMessage("Queue Test Email: "+string(i), string(buff))
 		emailData.From = mail.Address{Name: emailCreds.Name, Address: emailCreds.Address}
 		emailData.To = []string{"taliesinwrmillhouse@gmail.com"}
@@ -36,10 +37,17 @@ func main() {
 	}
 
 	var serivce message.Service
-	for i := 0; i > 10; i-- {
+	var wg sync.WaitGroup
+	for j := 0; j < 3; j++ {
 		if queue.CanPop() {
 			email := queue.Pop().(*message.Email)
-			serivce.SendEmail(email.Credentials, email.Data)
+			wg.Add(1)
+			go func() {
+				if err = serivce.SendEmail(email.Credentials, email.Data, &wg); err != nil {
+					log.Fatal(err)
+				}
+			}()
 		}
 	}
+	wg.Wait()
 }
