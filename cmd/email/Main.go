@@ -4,40 +4,50 @@ import (
 	"io/ioutil"
 	"log"
 	"net/mail"
+	"sync"
 
-	"github.com/FetchWeb/Fetch/pkg/email"
+	"github.com/FetchWeb/Fetch/pkg/core"
+	"github.com/FetchWeb/Fetch/pkg/message"
 )
 
 func main() {
-	// Load in config.
-	creds, err := email.LoadFromConfig("../../configs/TestEmailConfig.json")
+	emailCreds, err := message.LoadFromConfig("../../configs/TestEmailConfig.json")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Load in template.
-	buff, err := ioutil.ReadFile("../../test/email/TestEmailTemplate.html")
+	buff, err := ioutil.ReadFile("../../test/message/TestEmailTemplate.html")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Create & initialize message.
-	m := email.NewHTMLMessage("This is a subject", string(buff))
-	m.From = mail.Address{Name: creds.Name, Address: creds.Address}
-	m.To = []string{"taliesinwrmillhouse@gmail.com"}
+	var queue core.Queue
+	for i := 0; i < 3; i++ {
+		emailData := message.NewHTMLMessage("Queue Test Email: "+string(i), string(buff))
+		emailData.From = mail.Address{Name: emailCreds.Name, Address: emailCreds.Address}
+		emailData.To = []string{"taliesinwrmillhouse@gmail.com"}
 
-	// Add attachment.
-	if err := m.AddAttachment("../../test/email/attachment.jpg", false); err != nil {
-		log.Fatal(err)
+		if err := emailData.AddAttachment("../../test/message/attachment.jpg", false); err != nil {
+			log.Fatal(err)
+		}
+
+		email := &message.Email{Data: emailData, Credentials: emailCreds}
+
+		queue.Push(email)
 	}
 
-	// Add header.
-	m.AddHeader("X-CUSTOMER-id", "xxxxx")
-
-	// Send.
-	var emailService email.Service
-	err = emailService.SendEmail(creds, m)
-	if err != nil {
-		log.Fatal(err)
+	var serivce message.Service
+	var wg sync.WaitGroup
+	for j := 0; j < 3; j++ {
+		if queue.CanPop() {
+			email := queue.Pop().(*message.Email)
+			wg.Add(1)
+			go func() {
+				if err = serivce.SendEmail(email.Credentials, email.Data, &wg); err != nil {
+					log.Fatal(err)
+				}
+			}()
+		}
 	}
+	wg.Wait()
 }

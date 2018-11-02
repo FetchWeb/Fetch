@@ -1,4 +1,4 @@
-package email
+package message
 
 import (
 	"bytes"
@@ -13,8 +13,8 @@ import (
 	"time"
 )
 
-// Message represents a smtp message.
-type Message struct {
+// EmailData represents a smtp message.
+type EmailData struct {
 	From            mail.Address
 	To              []string
 	Cc              []string
@@ -27,22 +27,22 @@ type Message struct {
 	Attachments     map[string]*Attachment
 }
 
-// NewPlainTextMessage returns a new Message that can compose an email with attachments
-func NewPlainTextMessage(subject string, body string) *Message {
-	m := &Message{Subject: subject, Body: body, BodyContentType: "text/plain"}
-	m.Attachments = make(map[string]*Attachment)
-	return m
+// NewPlainTextMessage returns a new EmailData that can compose an email with attachments
+func NewPlainTextMessage(subject string, body string) *EmailData {
+	ed := &EmailData{Subject: subject, Body: body, BodyContentType: "text/plain"}
+	ed.Attachments = make(map[string]*Attachment)
+	return ed
 }
 
-// NewHTMLMessage returns a new Message that can compose an HTML email with attachments
-func NewHTMLMessage(subject string, body string) *Message {
-	m := &Message{Subject: subject, Body: body, BodyContentType: "text/html"}
-	m.Attachments = make(map[string]*Attachment)
-	return m
+// NewHTMLMessage returns a new EmailData that can compose an HTML email with attachments
+func NewHTMLMessage(subject string, body string) *EmailData {
+	ed := &EmailData{Subject: subject, Body: body, BodyContentType: "text/html"}
+	ed.Attachments = make(map[string]*Attachment)
+	return ed
 }
 
 // AddAttachment adds a new attachment to the message.
-func (m *Message) AddAttachment(file string, inline bool) error {
+func (ed *EmailData) AddAttachment(file string, inline bool) error {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func (m *Message) AddAttachment(file string, inline bool) error {
 
 	_, filename := filepath.Split(file)
 
-	m.Attachments[filename] = &Attachment{
+	ed.Attachments[filename] = &Attachment{
 		Filename: filename,
 		Data:     data,
 		Inline:   inline,
@@ -60,8 +60,8 @@ func (m *Message) AddAttachment(file string, inline bool) error {
 }
 
 // AttachBuffer attaches a binary attachment.
-func (m *Message) AttachBuffer(filename string, buf []byte, inline bool) error {
-	m.Attachments[filename] = &Attachment{
+func (ed *EmailData) AttachBuffer(filename string, buf []byte, inline bool) error {
+	ed.Attachments[filename] = &Attachment{
 		Filename: filename,
 		Data:     buf,
 		Inline:   inline,
@@ -70,21 +70,21 @@ func (m *Message) AttachBuffer(filename string, buf []byte, inline bool) error {
 }
 
 // AddHeader ads a Header to message
-func (m *Message) AddHeader(key string, value string) Header {
+func (ed *EmailData) AddHeader(key string, value string) Header {
 	newHeader := Header{Key: key, Value: value}
-	m.Headers = append(m.Headers, newHeader)
+	ed.Headers = append(ed.Headers, newHeader)
 	return newHeader
 }
 
 // GetRecipients returns all the recipients of the message.
-func (m *Message) GetRecipients() []string {
-	recipients := m.To
+func (ed *EmailData) GetRecipients() []string {
+	recipients := ed.To
 
-	for _, cc := range m.Cc {
+	for _, cc := range ed.Cc {
 		recipients = append(recipients, cc)
 	}
 
-	for _, bcc := range m.Bcc {
+	for _, bcc := range ed.Bcc {
 		recipients = append(recipients, bcc)
 	}
 
@@ -92,50 +92,51 @@ func (m *Message) GetRecipients() []string {
 }
 
 // Data returns all the message data as a byte array.
-func (m *Message) Data() []byte {
+func (ed *EmailData) Data() []byte {
 	buf := bytes.NewBuffer(nil)
 
 	// Write from and recipients.
-	buf.WriteString("From: " + m.From.String() + "\n")
+	buf.WriteString("From: " + ed.From.String() + "\n")
 	t := time.Now()
 	buf.WriteString("Date: " + t.Format(time.RFC1123Z) + "\n")
-	buf.WriteString("To: " + strings.Join(m.To, ",") + "\n")
-	if len(m.Cc) > 0 {
-		buf.WriteString("Cc: " + strings.Join(m.Cc, ",") + "\n")
+	buf.WriteString("To: " + strings.Join(ed.To, ",") + "\n")
+	if len(ed.Cc) > 0 {
+		buf.WriteString("Cc: " + strings.Join(ed.Cc, ",") + "\n")
 	}
 
 	// Write encoding.
 	var coder = base64.StdEncoding
-	var subject = "=?UTF-8?B?" + coder.EncodeToString([]byte(m.Subject)) + "?="
+	var subject = "=?UTF-8?B?" + coder.EncodeToString([]byte(ed.Subject)) + "?="
 	buf.WriteString("Subject: " + subject + "\n")
 
-	if len(m.ReplyTo) > 0 {
-		buf.WriteString("Reply-To: " + m.ReplyTo + "\n")
+	if len(ed.ReplyTo) > 0 {
+		buf.WriteString("Reply-To: " + ed.ReplyTo + "\n")
 	}
 
 	buf.WriteString("MIME-Version: 1.0\n")
 
 	// Write headers.
-	if len(m.Headers) > 0 {
-		for _, header := range m.Headers {
+	if len(ed.Headers) > 0 {
+		for _, header := range ed.Headers {
 			buf.WriteString(fmt.Sprintf("%s: %s\n", header.Key, header.Value))
 		}
 	}
 
-	// Write attachments.
+	// Write boundary.
 	boundary := "f46d043c813270fc6b04c2d223da"
-	if len(m.Attachments) > 0 {
+	if len(ed.Attachments) > 0 {
 		buf.WriteString("Content-Type: multipart/mixed; boundary=" + boundary + "\n")
 		buf.WriteString("\n--" + boundary + "\n")
 	}
 
 	// Write content type.
-	buf.WriteString(fmt.Sprintf("Content-Type: %s; charset=utf-8\n\n", m.BodyContentType))
-	buf.WriteString(m.Body)
+	buf.WriteString(fmt.Sprintf("Content-Type: %s; charset=utf-8\n\n", ed.BodyContentType))
+	buf.WriteString(ed.Body)
 	buf.WriteString("\n")
 
-	if len(m.Attachments) > 0 {
-		for _, attachment := range m.Attachments {
+	// Write attachments.
+	if len(ed.Attachments) > 0 {
+		for _, attachment := range ed.Attachments {
 			buf.WriteString("\n\n--" + boundary + "\n")
 
 			if attachment.Inline {
@@ -179,6 +180,6 @@ func (m *Message) Data() []byte {
 }
 
 // Send sends the message.
-func Send(addr string, auth smtp.Auth, m *Message) error {
-	return smtp.SendMail(addr, auth, m.From.Address, m.GetRecipients(), m.Data())
+func Send(addr string, auth smtp.Auth, ed *EmailData) error {
+	return smtp.SendMail(addr, auth, ed.From.Address, ed.GetRecipients(), ed.Data())
 }

@@ -1,4 +1,4 @@
-package email
+package message
 
 // Attachment represents an email attachment.
 type Attachment struct {
