@@ -4,18 +4,13 @@ import (
 	"log"
 )
 
-type QItem struct {
-	Value interface{}
-	next  *QItem
-}
-
 type Queue struct {
-	head *QItem
-	tail *QItem
+	head *QueueItem
+	tail *QueueItem
 }
 
 func (q *Queue) Push(value interface{}) {
-	item := &QItem{value, nil}
+	item := &QueueItem{value, nil}
 	if q.tail != nil {
 		q.tail.next = item
 	}
