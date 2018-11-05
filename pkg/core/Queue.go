@@ -29,6 +29,10 @@ func (q *Queue) Pop() interface{} {
 
 	value := q.head.Value
 	q.head = q.head.next
+
+	if (q.head == nil) {
+		q.tail = nil
+	}
 	return value
 }
 

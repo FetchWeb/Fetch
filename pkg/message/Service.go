@@ -1,9 +1,8 @@
 package message
 
 import (
-	"github.com/FetchWeb/Fetch/pkg/message"
 	"net/smtp"
-	"sync"
+	"strings"
 
 	"github.com/FetchWeb/Fetch/pkg/core"
 	"github.com/go-redis/redis"
@@ -30,7 +29,7 @@ func (s *Service) Startup() error {
 }
 
 func (s *Service) EnqueueEmail(e *Email) error {
-	b, err := e.MarshalBinary()
+	data, err := e.MarshalBinary()
 	if err != nil {
 		return err
 	}
@@ -38,36 +37,53 @@ func (s *Service) EnqueueEmail(e *Email) error {
 	key := core.UniqueID()
 	s.clientKeys.Push(key)
 
-	err = s.client.Set(key, b, 0).Err()
+	err = s.client.Set(key, data, 0).Err()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Service) SendEmails() error {
-	while (s.clientKeys.CanPop()) {
-		
-	}
+func (s *Service) DequeueEmail() error {
 	if !s.clientKeys.CanPop() {
-		return nil;
+		return nil
 	}
 
-	val, err := s.client.Get(s.clientKeys.Pop().(string)).Result()
+	key := s.clientKeys.Pop().(string)
+
+	data, err := s.client.Get(key).Result()
 	if err != nil {
 		return err
 	}
 
-	var e message.Email
+	var email Email
+	err = email.UnmarshalBinary([]byte(data))
+	if err != nil {
+		return err
+	}
+
+	addr := strings.Join([]string{email.Credentials.Hostname, ":", email.Credentials.Port}, "")
+	auth := smtp.PlainAuth("", email.Credentials.Address, email.Credentials.Password, email.Credentials.Hostname)
+
+	err = smtp.SendMail(addr, auth, email.Credentials.Address, email.Data.GetRecipients(), email.Data.Data())
+	if err != nil {
+		return err
+	}
+
+	_, err = s.client.Del(key).Result()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-// SendEmail sends an email with the message to the recipients from the sender.
-func (s *Service) SendEmail(ec *EmailCredentials, ed *EmailData) error {
-	return smtp.SendMail(ec.Hostname+":"+ec.Port, smtp.PlainAuth("", ec.Address, ec.Password, ec.Hostname), ec.Address, ed.GetRecipients(), ed.Data())
-}
+// // SendEmail sends an email with the message to the recipients from the sender.
+// func (s *Service) SendEmail(ec *EmailCredentials, ed *EmailData) error {
+// 	return smtp.SendMail(ec.Hostname+":"+ec.Port, smtp.PlainAuth("", ec.Address, ec.Password, ec.Hostname), ec.Address, ed.GetRecipients(), ed.Data())
+// }
 
-// SendEmailAsync sends an email using a goroutine with the message to the recipients from the sender.
-func (s *Service) SendEmailAsync(ec *EmailCredentials, ed *EmailData, wg *sync.WaitGroup) error {
-	defer wg.Done()
-	return smtp.SendMail(ec.Hostname+":"+ec.Port, smtp.PlainAuth("", ec.Address, ec.Password, ec.Hostname), ec.Address, ed.GetRecipients(), ed.Data())
-}
+// // SendEmailAsync sends an email using a goroutine with the message to the recipients from the sender.
+// func (s *Service) SendEmailAsync(ec *EmailCredentials, ed *EmailData, wg *sync.WaitGroup) error {
+// 	defer wg.Done()
+// 	return smtp.SendMail(ec.Hostname+":"+ec.Port, smtp.PlainAuth("", ec.Address, ec.Password, ec.Hostname), ec.Address, ed.GetRecipients(), ed.Data())
+// }
