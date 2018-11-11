@@ -1,8 +1,12 @@
 package message
 
 import (
+	"encoding/json"
+	"log"
+	"net/http"
 	"net/smtp"
 	"strings"
+	"time"
 
 	"github.com/FetchWeb/Fetch/pkg/core"
 	"github.com/go-redis/redis"
@@ -28,6 +32,33 @@ func (s *Service) Startup() error {
 	return nil
 }
 
+func (s *Service) Listen(w http.ResponseWriter, r *http.Request) {
+	email := &Email{}
+	err := json.NewDecoder(r.Body).Decode(email)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Print(err)
+		return
+	}
+
+	err = s.EnqueueEmail(email)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+func (s *Service) Check() {
+	for {
+		if !s.clientKeys.CanPop() {
+			time.Sleep(1000 * time.Millisecond)
+			continue
+		}
+		if err := s.DequeueEmail(); err != nil {
+			log.Print(err) // TODO: Add recovery functionality for email.
+		}
+	}
+}
+
 func (s *Service) EnqueueEmail(e *Email) error {
 	data, err := e.MarshalBinary()
 	if err != nil {
@@ -45,10 +76,6 @@ func (s *Service) EnqueueEmail(e *Email) error {
 }
 
 func (s *Service) DequeueEmail() error {
-	if !s.clientKeys.CanPop() {
-		return nil
-	}
-
 	key := s.clientKeys.Pop().(string)
 
 	data, err := s.client.Get(key).Result()

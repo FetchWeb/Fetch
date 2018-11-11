@@ -15,29 +15,29 @@ import (
 
 // EmailData represents a smtp message.
 type EmailData struct {
-	From            mail.Address
-	To              []string
-	Cc              []string
-	Bcc             []string
-	ReplyTo         string
-	Subject         string
-	Body            string
-	BodyContentType string
-	Headers         []Header
-	Attachments     map[string]*Attachment
+	From            mail.Address                `json:"from"`
+	To              []string                    `json:"to"`
+	Cc              []string                    `json:"cc"`
+	Bcc             []string                    `json:"bcc"`
+	ReplyTo         string                      `json:"replyto"`
+	Subject         string                      `json:"subject"`
+	Body            string                      `json:"body"`
+	BodyContentType string                      `json:"bodycontenttype"`
+	Headers         []Header                    `json:"headers"`
+	Attachments     map[string]*EmailAttachment `json:"attachments"`
 }
 
 // NewPlainTextMessage returns a new EmailData that can compose an email with attachments
 func NewPlainTextMessage(subject string, body string) *EmailData {
 	ed := &EmailData{Subject: subject, Body: body, BodyContentType: "text/plain"}
-	ed.Attachments = make(map[string]*Attachment)
+	ed.Attachments = make(map[string]*EmailAttachment)
 	return ed
 }
 
 // NewHTMLMessage returns a new EmailData that can compose an HTML email with attachments
 func NewHTMLMessage(subject string, body string) *EmailData {
 	ed := &EmailData{Subject: subject, Body: body, BodyContentType: "text/html"}
-	ed.Attachments = make(map[string]*Attachment)
+	ed.Attachments = make(map[string]*EmailAttachment)
 	return ed
 }
 
@@ -50,7 +50,7 @@ func (ed *EmailData) AddAttachment(file string, inline bool) error {
 
 	_, filename := filepath.Split(file)
 
-	ed.Attachments[filename] = &Attachment{
+	ed.Attachments[filename] = &EmailAttachment{
 		Filename: filename,
 		Data:     data,
 		Inline:   inline,
@@ -61,7 +61,7 @@ func (ed *EmailData) AddAttachment(file string, inline bool) error {
 
 // AttachBuffer attaches a binary attachment.
 func (ed *EmailData) AttachBuffer(filename string, buf []byte, inline bool) error {
-	ed.Attachments[filename] = &Attachment{
+	ed.Attachments[filename] = &EmailAttachment{
 		Filename: filename,
 		Data:     buf,
 		Inline:   inline,
