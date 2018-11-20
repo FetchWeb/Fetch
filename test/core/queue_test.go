@@ -13,13 +13,37 @@ func TestQueue(t *testing.T) {
 	RunSpecs(t, "Queue Test Suite")
 }
 
-func BenchmarkQueue(b *testing.B) {
+func BenchmarkQueueSmallItem(b *testing.B) {
 	var queue Queue
 
 	// Benchmark pushing b.N items to queue, then separately popping
 	// the same amount from the queue
 	for n := 0; n < b.N; n++ {
 		queueItem := QueueItem{Value: 42}
+		queue.Push(queueItem)
+	}
+
+	for n := 0; n < b.N; n++ {
+		queue.Pop()
+	}
+}
+
+// The "LargeItem" is really not that large (about an extra 50 bytes or so), it really should
+// be a bit bigger
+func BenchmarkQueueLargeItem(b *testing.B) {
+	var queue Queue
+
+	// Benchmark pushing b.N items to queue, then separately popping
+	// the same amount from the queue
+	type largeItem struct {
+		Number    int64
+		FloatNum  float64
+		Text      string
+		Something interface{}
+	}
+
+	for n := 0; n < b.N; n++ {
+		queueItem := QueueItem{Value: largeItem{Number: 123456789, FloatNum: 420.133769, Text: "This is a string for a large queue item", Something: 4.5}}
 		queue.Push(queueItem)
 	}
 
