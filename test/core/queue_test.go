@@ -8,9 +8,24 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestCart(t *testing.T) {
+func TestQueue(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Queue Test Suite")
+}
+
+func BenchmarkQueue(b *testing.B) {
+	var queue Queue
+
+	// Benchmark pushing b.N items to queue, then separately popping
+	// the same amount from the queue
+	for n := 0; n < b.N; n++ {
+		queueItem := QueueItem{Value: 42}
+		queue.Push(queueItem)
+	}
+
+	for n := 0; n < b.N; n++ {
+		queue.Pop()
+	}
 }
 
 var _ = Describe("Queue", func() {
