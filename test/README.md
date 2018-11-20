@@ -1,9 +1,32 @@
-# `/test`
+# Testing Fetch
 
-Additional external test apps and test data. Feel free to structure the `/test` directory anyway you want. For bigger projects it makes sense to have a data subdirectory. For example, you can have `/test/data` or `/test/testdata` if you need Go to ignore what's in that directory. Note that Go will also ignore directories or files that begin with "." or "_", so you have more flexibility in terms of how you name your test data directory.
+## Setup
+If not already installed, you'll need Ginkgo and Gomega:
+```sh
+go get github.com/onsi/ginkgo
+go get github.com/onsi/gomega
+```
 
-Examples:
+## Running all tests
+Fetch's testing harness uses [Ginkgo](https://github.com/onsi/ginkgo) to test Fetch, simply move to this directory (/test) and run:
+```sh
+go test ./...
+```
+or (you will need to install ginkgo as an CLI executable):
+```sh
+ginkgo -r
+```
 
-* https://github.com/openshift/origin/tree/master/test (test data is in the `/testdata` subdirectory)
+## Running a single test
+Similar to above, to run a single test instead run:
+```sh
+go test ./<path to module test suite> (i.e. go test ./core)
+```
+or
+```sh
+ginkgo ./<path to module test suite> (i.e. go test ./core)
+```
 
+## Running with verbose output
+With ginkgo you can append ```-v``` to the command to get verbose output, this will describe every test that is running.
 
