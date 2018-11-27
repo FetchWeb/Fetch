@@ -72,10 +72,6 @@ func TestLoggingToConsole(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to log Fatal message: %v", err)
 	}
-
-	if err := os.Remove(time.Now().Format("Log_2006-01-02.json")); err != nil {
-		t.Logf("Failed to delete log file after test: %v", err)
-	}
 }
 
 func TestLoggingToFile(t *testing.T) {
@@ -176,10 +172,6 @@ func BenchmarkLoggingToConsole(b *testing.B) {
 		if err != nil {
 			b.Errorf("Failed to log Fatal message: %v", err)
 		}
-	}
-
-	if err := os.Remove(time.Now().Format("Log_2006-01-02.json")); err != nil {
-		b.Logf("Failed to delete log file after test: %v", err)
 	}
 }
 
