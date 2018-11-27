@@ -1,13 +1,14 @@
 package main
 
 import (
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/FetchWeb/Fetch/pkg/log"
 )
 
 func main() {
-	// var authService core.AuthService
-	// authService.Startup()
-	// http.HandleFunc("/signin", authService.Signin)
-	// http.HandleFunc("/signup", authService.Signup)
-	// log.Fatal(http.ListenAndServe(":8000", nil))
+	log.LogDirectory = "../../logs/"
+	log.Info("LOG", "This is an info message")
+	log.Debug("LOG", "This is a debug message")
+	log.Warning("LOG", "This is a warning message")
+	log.Error("LOG", "This is an error message")
+	log.Fatal("LOG", "This is a fatal message")
 }
