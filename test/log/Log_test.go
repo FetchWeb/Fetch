@@ -109,7 +109,7 @@ func TestLoggingToFile(t *testing.T) {
 }
 
 func BenchmarkLogging(b *testing.B) {
-	for i := 0; i < benchmarkIterations; i++ {
+	for i := 0; i < b.N; i++ {
 		log.LogDirectory = logDirectory
 
 		err := log.Info("LOG_TEST", "This is an a test info message")
@@ -144,7 +144,7 @@ func BenchmarkLogging(b *testing.B) {
 }
 
 func BenchmarkLoggingToConsole(b *testing.B) {
-	for i := 0; i < benchmarkIterations; i++ {
+	for i := 0; i < b.N; i++ {
 		log.LogDirectory = logDirectory
 		log.LogToFile = false
 
@@ -176,7 +176,7 @@ func BenchmarkLoggingToConsole(b *testing.B) {
 }
 
 func BenchmarkLoggingToFile(b *testing.B) {
-	for i := 0; i < benchmarkIterations; i++ {
+	for i := 0; i < b.N; i++ {
 		log.LogDirectory = logDirectory
 		log.LogToConsole = false
 
