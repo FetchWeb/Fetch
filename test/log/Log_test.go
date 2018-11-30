@@ -9,7 +9,6 @@ import (
 )
 
 const logDirectory = ""
-const benchmarkIterations = 1000
 
 func TestLogging(t *testing.T) {
 	log.LogDirectory = logDirectory
