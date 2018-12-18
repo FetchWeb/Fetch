@@ -1,2 +1,5 @@
 debug
 configs
+.vscode
+bin
+logs
