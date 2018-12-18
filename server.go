@@ -18,6 +18,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/fetchweb/fetch/core"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	config "github.com/micro/go-config"
 	"github.com/micro/go-config/source/file"
 	"golang.org/x/net/http2"
@@ -27,6 +30,7 @@ var (
 	_router *Router
 	_mux    *http.ServeMux
 	_config interface{}
+	_db     *gorm.DB
 )
 
 // Server is the... server
@@ -34,6 +38,13 @@ type Server struct {
 	BaseDir string
 	Port    string
 	Config  interface{}
+}
+
+type DatabaseStruct struct {
+	database string
+	driver   string
+	username string
+	password string
 }
 
 // TODO: Finish manifest struct
@@ -56,7 +67,7 @@ type ManifestStruct struct {
 }
 
 // Setup sets up defaults
-func (server *Server) Setup() {
+func (server *Server) Setup() error {
 	_mux = http.NewServeMux()
 	server.SetRouter(NewRouter())
 
@@ -78,6 +89,16 @@ func (server *Server) Setup() {
 	_config.Load(fileSource)
 
 	server.Config = _config.Map()
+
+	var database DatabaseStruct
+	// extract db from config into struct
+	_config.Get("database").Scan(&database)
+
+	var err error
+	_db, err = gorm.Open(database.driver, core.JoinStrings(database.username, ":", database.password, "@/", database.database, "?charset=utf8&parseTime=True&loc=Local"))
+	defer _db.Close()
+
+	return err
 }
 
 // Start starts the webserver

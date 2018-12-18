@@ -77,7 +77,8 @@ var _ = Describe("Queue", func() {
 
 				queue_count := 0
 				for queue.CanPop() {
-					queue.Pop()
+					expectedQueueItem := queue.Pop()
+					Expect(expectedQueueItem).To(Equal(queueItem1))
 					queue_count++
 				}
 
