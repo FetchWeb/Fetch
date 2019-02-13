@@ -163,7 +163,7 @@ func makeHandler(method string, fn RequestHandler) http.HandlerFunc {
 		fmt.Printf("[%s] %s\t%s: %s\n", time.Now().Format("2006-01-02 15:04:05.000000"), r.RemoteAddr, r.Method, r.URL.Path)
 
 		var response = Response{w}
-		var request = Request{r}
+		var request = Request{R: r, DB: _db}
 
 		fn(response, request)
 	}

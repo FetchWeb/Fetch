@@ -1,8 +1,8 @@
-// package core
+package core
 
-// // Auth struct contains functions to authenticate
-// type Auth struct {
-// }
+// Auth struct contains functions to authenticate
+type Auth struct {
+}
 
 // // User struct to store
 // type User struct {

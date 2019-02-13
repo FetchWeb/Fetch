@@ -14,6 +14,7 @@ package fetch
  */
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -37,14 +38,15 @@ var (
 type Server struct {
 	BaseDir string
 	Port    string
-	Config  interface{}
+	Config  map[string]interface{}
 }
 
 type DatabaseStruct struct {
-	database string
-	driver   string
-	username string
-	password string
+	Database string
+	Driver   string
+	Username string
+	Password string
+	Port     uint16
 }
 
 // TODO: Finish manifest struct
@@ -94,11 +96,22 @@ func (server *Server) Setup() error {
 	// extract db from config into struct
 	_config.Get("database").Scan(&database)
 
-	var err error
-	_db, err = gorm.Open(database.driver, core.JoinStrings(database.username, ":", database.password, "@/", database.database, "?charset=utf8&parseTime=True&loc=Local"))
-	defer _db.Close()
+	if database.Driver == "" || database.Database == "" {
+		return errors.New("Missing database connection credentials")
+	}
 
-	return err
+	var err error
+	_db, err = gorm.Open(database.Driver, core.JoinStrings(database.Username, ":", database.Password, "@/", database.Database, "?charset=utf8&parseTime=True&loc=Local"))
+
+	if err != nil {
+		return err
+	}
+
+	_db.SingularTable(true)
+
+	// defer _db.Close()
+
+	return nil
 }
 
 // Start starts the webserver
@@ -147,10 +160,8 @@ func (server *Server) Start() {
 	server.GetRouter().Get("/manifest.json", server.manifestHandler)
 	server.GetRouter().SetupRoutes(_mux)
 
-	// TODO: Add support for custom SSL cert directory
 	log.Fatal(srv.ListenAndServeTLS(server.BaseDir+"/server.crt", server.BaseDir+"/server.key"))
 
-	// log.Fatal(http.ListenAndServe(":"+server.Port, nil))
 }
 
 // SetRouter sets the current router
@@ -162,6 +173,21 @@ func (server *Server) SetRouter(router *Router) {
 // GetRouter returns the router
 func (server *Server) GetRouter() *Router {
 	return _router
+}
+
+func (server *Server) Cleanup() {
+	if _db != nil {
+		_db.Close()
+	}
+}
+
+// GetDatabase gets the active database connection
+func (server *Server) GetDatabase() (*gorm.DB, error) {
+	if _db == nil {
+		return nil, errors.New("No active database connection found")
+	}
+
+	return _db, nil
 }
 
 // TODO: Make manifest struct
