@@ -158,6 +158,11 @@ func makeHandler(method string, fn RequestHandler) http.HandlerFunc {
 		//
 		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 
+		if len(_headers) > 0 {
+			for key, value := range _headers {
+				w.Header().Set(key, value)
+			}
+		}
 		// Log every request to console
 		// @todo: Add support to log to file (?)
 		fmt.Printf("[%s] %s\t%s: %s\n", time.Now().Format("2006-01-02 15:04:05.000000"), r.RemoteAddr, r.Method, r.URL.Path)

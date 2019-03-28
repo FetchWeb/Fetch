@@ -28,10 +28,11 @@ import (
 )
 
 var (
-	_router *Router
-	_mux    *http.ServeMux
-	_config interface{}
-	_db     *gorm.DB
+	_router  *Router
+	_mux     *http.ServeMux
+	_config  interface{}
+	_db      *gorm.DB
+	_headers map[string]string
 )
 
 // Server is the... server
@@ -175,6 +176,7 @@ func (server *Server) GetRouter() *Router {
 	return _router
 }
 
+// Cleanup cleans up any connections the server might have when it's terminated
 func (server *Server) Cleanup() {
 	if _db != nil {
 		_db.Close()
@@ -193,4 +195,24 @@ func (server *Server) GetDatabase() (*gorm.DB, error) {
 // TODO: Make manifest struct
 func (server *Server) manifestHandler(w Response, r Request) {
 	w.Write([]byte("{\"short_name\": \"Fetch\",\"name\": \"\",\"icons\": [{\"src\":\"\",\"sizes\": \"\",\"type\": \"\"}],\"start_url\": \"\",\"background_color\": \"\",\"Theme_color\": \"\",\"display\": \"\"}"))
+}
+
+// AddHeader sets a custom header
+func (server *Server) AddHeader(key string, value string) {
+	_headers[key] = value
+}
+
+// RemoveHeader removes a custom set header
+func (server *Server) RemoveHeader(key string) error {
+	if _, ok := _headers[key]; ok {
+		delete(_headers, key)
+		return nil
+	}
+
+	return errors.New("Header key does not exist")
+}
+
+// GetHeaders returns all custom set headers
+func (server *Server) GetHeaders() map[string]string {
+	return _headers
 }
