@@ -71,6 +71,7 @@ type ManifestStruct struct {
 
 // Setup sets up defaults
 func (server *Server) Setup() error {
+	_headers = make(map[string]string)
 	_mux = http.NewServeMux()
 	server.SetRouter(NewRouter())
 
