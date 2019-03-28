@@ -1,4 +1,4 @@
-// Package webserver - core web server code
+// Package fetch - core web server code
 package fetch
 
 /**
@@ -21,7 +21,7 @@ import (
 
 	"github.com/fetchweb/fetch/core"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/mysql" // Gorm needs the necessary dialect blank imported to use properly
 	config "github.com/micro/go-config"
 	"github.com/micro/go-config/source/file"
 	"golang.org/x/net/http2"
@@ -42,31 +42,13 @@ type Server struct {
 	Config  map[string]interface{}
 }
 
+// DatabaseStruct stores necessary details for database connection
 type DatabaseStruct struct {
 	Database string
 	Driver   string
 	Username string
 	Password string
 	Port     uint16
-}
-
-// TODO: Finish manifest struct
-type ManifestStruct struct {
-	// {
-	// 	"short_name": "",
-	// 	"name": "",
-	// 	"icons": [
-	// 	  {
-	// 		"src":"",
-	// 		"sizes": "",
-	// 		"type": ""
-	// 	  }
-	// 	],
-	// 	"start_url": "",
-	// 	"background_color": "",
-	// 	"Theme_color": "",
-	// 	"display": ""
-	//   }
 }
 
 // Setup sets up defaults
@@ -110,8 +92,6 @@ func (server *Server) Setup() error {
 	}
 
 	_db.SingularTable(true)
-
-	// defer _db.Close()
 
 	return nil
 }
@@ -159,7 +139,6 @@ func (server *Server) Start() {
 
 	http2.ConfigureServer(srv, &http2.Server{})
 
-	server.GetRouter().Get("/manifest.json", server.manifestHandler)
 	server.GetRouter().SetupRoutes(_mux)
 
 	log.Fatal(srv.ListenAndServeTLS(server.BaseDir+"/server.crt", server.BaseDir+"/server.key"))
@@ -191,11 +170,6 @@ func (server *Server) GetDatabase() (*gorm.DB, error) {
 	}
 
 	return _db, nil
-}
-
-// TODO: Make manifest struct
-func (server *Server) manifestHandler(w Response, r Request) {
-	w.Write([]byte("{\"short_name\": \"Fetch\",\"name\": \"\",\"icons\": [{\"src\":\"\",\"sizes\": \"\",\"type\": \"\"}],\"start_url\": \"\",\"background_color\": \"\",\"Theme_color\": \"\",\"display\": \"\"}"))
 }
 
 // AddHeader sets a custom header

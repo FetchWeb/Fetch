@@ -6,5 +6,5 @@ go:
   - "master"
 
 script:
-  - go build
-  - go test
+  - GO111MODULE=on go build
+  - GO111MODULE=on go test

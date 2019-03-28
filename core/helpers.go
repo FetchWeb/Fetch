@@ -17,6 +17,7 @@ func (ac *ArrayUtil) Contains(haystack []interface{}, needle interface{}) bool {
 	return false
 }
 
+// JoinStrings will combine a variadic list of strings into a single string
 func JoinStrings(strs ...string) string {
 	var stringsBuilder strings.Builder
 	for _, str := range strs {
