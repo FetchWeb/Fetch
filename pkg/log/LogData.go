@@ -1,6 +1,6 @@
 package log
 
-// Data @TODO
+// Data holds all the data stored in a log.
 type Data struct {
 	Level     string `json:"level"`
 	Prefix    string `json:"prefix"`
