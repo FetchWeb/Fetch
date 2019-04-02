@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fetchweb/fetch)](https://goreportcard.com/report/github.com/fetchweb/fetch)
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/fetchweb/fetch)
+[![Build Status](https://travis-ci.org/FetchWeb/Fetch.svg?branch=master)](https://travis-ci.org/FetchWeb/Fetch)
 [![Release](https://img.shields.io/github/release/golang-standards/project-layout.svg?style=flat-square)](https://github.com/FetchWeb/Fetch/releases/tag/v0.1.0)
 
 This is an experimental web server written in Go. Do not use in production.
