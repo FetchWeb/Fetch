@@ -2,108 +2,132 @@ package log
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"log"
 	"os"
 	"time"
+
+	fetch "github.com/FetchWeb/Fetch/pkg/core"
 )
 
-// LogDirectory is the directory that the log file will be written to.
-var LogDirectory string
+// logOptions holds the currently set LogOptions
+var logOptions *Options
 
-// LogDebug is the check whether debug messages should be logged.
-var LogDebug = true
-
-// LogInfo is the check whether info messages should be logged.
-var LogInfo = true
-
-// LogWarning is the check whether warning messages should be logged.
-var LogWarning = true
-
-// LogError is the check whether error messages should be logged.
-var LogError = true
-
-// LogFatal is the check whether fatal messages should be logged.
-var LogFatal = true
-
-// LogToConsole is the check whether log messages should be written to console.
-var LogToConsole = true
-
-// LogToFile is the check whether log messages should be written to file.
-var LogToFile = true
+// logFile hold the file the logs are being written to.
+var logFile *os.File
 
 // Debug for logging any messages useful for debugging applications.
-func Debug(pkg string, msg string) error {
-	if LogDebug {
-		return writeLog("DEBUG", msg, pkg)
+func Debug(message string) {
+	if logOptions.LogDebug {
+		writeLog("DEBUG", message)
 	}
-	return errors.New("Debug messages aren't being logged but Debug is being called")
+}
+
+// Debugf for logging any messages useful for debugging applications.
+func Debugf(message string, v ...interface{}) {
+	if logOptions.LogDebug {
+		writeLog("DEBUG", fmt.Sprintf(message, v...))
+	}
 }
 
 // Info for logging any messages about useful information.
-func Info(pkg string, msg string) error {
-	if LogInfo {
-		return writeLog("INFO", msg, pkg)
+func Info(message string) {
+	if logOptions.LogInfo {
+		writeLog("INFO", message)
 	}
-	return errors.New("Info messages aren't being logged but Info is being called")
+}
+
+// Infof for logging any messages about useful information.
+func Infof(message string, v ...interface{}) {
+	if logOptions.LogInfo {
+		writeLog("INFO", fmt.Sprintf(message, v...))
+	}
 }
 
 // Warning for logging any warning messages. Example, bad practices.
-func Warning(pkg string, msg string) error {
-	if LogWarning {
-		return writeLog("WARNING", msg, pkg)
+func Warning(message string) {
+	if logOptions.LogWarning {
+		writeLog("WARNING", message)
 	}
-	return errors.New("Warning messages aren't being logged but Warning is being called")
+}
+
+// Warningf for logging any warning messages. Example, bad practices.
+func Warningf(message string, v ...interface{}) {
+	if logOptions.LogWarning {
+		writeLog("WARNING", fmt.Sprintf(message, v...))
+	}
 }
 
 // Error for logging any error messages where the application is able to recover from.
-func Error(pkg string, msg string) error {
-	if LogError {
-		return writeLog("ERROR", msg, pkg)
+func Error(message string) {
+	if logOptions.LogError {
+		writeLog("ERROR", message)
 	}
-	return errors.New("Error messages aren't being logged but Error is being called")
+}
+
+// Errorf for logging any error messages where the application is able to recover from.
+func Errorf(message string, v ...interface{}) {
+	if logOptions.LogError {
+		writeLog("ERROR", fmt.Sprintf(message, v...))
+	}
 }
 
 // Fatal for logging any fatal messages where the application is unable to recover from.
-func Fatal(pkg string, msg string) error {
-	if LogFatal {
-		return writeLog("FATAL", msg, pkg)
+func Fatal(message string) {
+	if logOptions.LogFatal {
+		writeLog("FATAL", message)
 	}
-	return errors.New("Fatal messages aren't being logged but Fatal is being called")
 }
 
-// writeLog writes the log message to console and file depending on which configuration is checked.
-func writeLog(lvl string, msg string, pkg string) error {
-	currTime := time.Now()
-	timestamp := currTime.Format("2006-01-02 15:04:05")
+// Fatalf for logging any fatal messages where the application is unable to recover from.
+func Fatalf(message string, v ...interface{}) {
+	if logOptions.LogFatal {
+		writeLog("FATAL", fmt.Sprintf(message, v...))
+	}
+}
 
-	output, err := json.Marshal(map[string]string{
-		"level":   lvl,
-		"time":    timestamp,
-		"package": pkg,
-		"message": msg})
+// Startup initialises the log package.
+func Startup(options *Options) error {
+	if options == nil {
+		options = DefaultOptions()
+	}
 
+	logOptions = options
+
+	var err error
+	logFile, err = os.OpenFile(fetch.JoinStrings(logOptions.Directory, time.Now().Format("Log_2006-01-02.json")), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
-		log.Printf("ERROR {LOG}: Failed to Marshal JSON on Info: %v", err)
 		return err
 	}
 
-	if LogToFile {
-		logFilename := currTime.Format("Log_2006-01-02.json")
-		file, err := os.OpenFile(LogDirectory+logFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	output, err := json.Marshal(&Data{
+		Level:     "INFO",
+		Prefix:    logOptions.Prefix,
+		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
+		Message:   "Initial log",
+	})
 
-		if err != nil {
-			log.Printf("ERROR {LOG}: Failed to open log file: %v", err)
-			return err
-		}
-		defer file.Close()
-
-		file.WriteString(string(output) + "\n")
+	if err != nil {
+		return err
 	}
 
-	if LogToConsole {
-		fmt.Println(string(output))
-	}
+	logFile.Write(append([]byte("["), output...))
 	return nil
+}
+
+// Shutdown shuts down the log package.
+func Shutdown() {
+	logFile.WriteString("]")
+	logFile.Close()
+}
+
+// writeLog writes the log message to console and file depending on which configuration is checked.
+func writeLog(level string, message string) {
+	output, _ := json.Marshal(&Data{
+		Level:     level,
+		Prefix:    logOptions.Prefix,
+		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
+		Message:   message,
+	})
+
+	logFile.Write(append([]byte(","), output...))
 }
