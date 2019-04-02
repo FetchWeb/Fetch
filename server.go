@@ -19,7 +19,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/FetchWeb/Fetch/core"
+	"github.com/FetchWeb/Fetch/pkg/core"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql" // Gorm needs the necessary dialect blank imported to use properly
 	config "github.com/micro/go-config"
