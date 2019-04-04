@@ -29,18 +29,20 @@ import (
 )
 
 var (
-	_router  *Router
-	_mux     *http.ServeMux
-	_config  interface{}
-	_db      *gorm.DB
-	_headers map[string]string
+	_router     *Router
+	_mux        *http.ServeMux
+	_config     interface{}
+	_db         *gorm.DB
+	_headers    map[string]string
+	_middleware *RouterMiddleware
 )
 
 // Server is the... server
 type Server struct {
-	BaseDir string
-	Port    string
-	Config  map[string]interface{}
+	BaseDir  string
+	CertsDir string
+	Port     string
+	Config   map[string]interface{}
 }
 
 // DatabaseStruct stores necessary details for database connection
@@ -142,7 +144,15 @@ func (server *Server) Start() {
 
 	server.GetRouter().SetupRoutes(_mux)
 
-	log.Fatal(srv.ListenAndServeTLS(server.BaseDir+"/server.crt", server.BaseDir+"/server.key"))
+	// Try and figure out where to search for certificates
+	var certsDir string
+	if server.CertsDir != "" {
+		certsDir = server.CertsDir
+	} else {
+		certsDir = server.BaseDir
+	}
+
+	log.Fatal(srv.ListenAndServeTLS(certsDir+"/server.crt", certsDir+"/server.key"))
 
 }
 
@@ -191,4 +201,19 @@ func (server *Server) RemoveHeader(key string) error {
 // GetHeaders returns all custom set headers
 func (server *Server) GetHeaders() map[string]string {
 	return _headers
+}
+
+// RegisterMiddleware sets a custom header
+func (server *Server) RegisterMiddleware(key string, value MiddlewareAdapter) {
+	_middleware.Executables[key] = value
+}
+
+// DeregisterMiddleware removes a custom set header
+func (server *Server) DeregisterMiddleware(key string) error {
+	if _, ok := _middleware.Executables[key]; ok {
+		delete(_middleware.Executables, key)
+		return nil
+	}
+
+	return errors.New("Middleware key does not exist")
 }
