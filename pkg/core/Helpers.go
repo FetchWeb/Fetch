@@ -1,6 +1,8 @@
 package core
 
-import "strings"
+import (
+	"strings"
+)
 
 // ArrayUtil generic functions
 type ArrayUtil struct{}

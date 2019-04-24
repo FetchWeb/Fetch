@@ -32,7 +32,7 @@ var (
 	_router  *Router
 	_mux     *http.ServeMux
 	_config  interface{}
-	_db      *gorm.DB
+	DB       *gorm.DB
 	_headers map[string]string
 )
 
@@ -86,13 +86,13 @@ func (server *Server) Setup() error {
 	}
 
 	var err error
-	_db, err = gorm.Open(database.Driver, core.JoinStrings(database.Username, ":", database.Password, "@/", database.Database, "?charset=utf8&parseTime=True&loc=Local"))
+	DB, err = gorm.Open(database.Driver, core.JoinStrings(database.Username, ":", database.Password, "@/", database.Database, "?charset=utf8&parseTime=True&loc=Local"))
 
 	if err != nil {
 		return err
 	}
 
-	_db.SingularTable(true)
+	DB.SingularTable(true)
 
 	return nil
 }
@@ -159,18 +159,18 @@ func (server *Server) GetRouter() *Router {
 
 // Cleanup cleans up any connections the server might have when it's terminated
 func (server *Server) Cleanup() {
-	if _db != nil {
-		_db.Close()
+	if DB != nil {
+		DB.Close()
 	}
 }
 
 // GetDatabase gets the active database connection
 func (server *Server) GetDatabase() (*gorm.DB, error) {
-	if _db == nil {
+	if DB == nil {
 		return nil, errors.New("No active database connection found")
 	}
 
-	return _db, nil
+	return DB, nil
 }
 
 // AddHeader sets a custom header

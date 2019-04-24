@@ -122,38 +122,47 @@ func (router *Router) Options(route string, h RequestHandler) error {
 func (router *Router) SetupRoutes(mux *http.ServeMux) {
 	for key, value := range router.GetRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("GET", value))
+		mux.HandleFunc(key, methodCheck("GET", makeHandler(value)))
 	}
 	for key, value := range router.HeadRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("HEAD", value))
+		mux.HandleFunc(key, methodCheck("HEAD", makeHandler(value)))
 	}
 	for key, value := range router.PostRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("POST", value))
+		mux.HandleFunc(key, methodCheck("POST", makeHandler(value)))
 	}
 	for key, value := range router.PutRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("PUT", value))
+		mux.HandleFunc(key, methodCheck("PUT", makeHandler(value)))
 	}
 	for key, value := range router.DeleteRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("DELETE", value))
+		mux.HandleFunc(key, methodCheck("DELETE", makeHandler(value)))
 	}
 	for key, value := range router.OptionRegister {
 		fmt.Println("Setting up route: " + key)
-		mux.HandleFunc(key, makeHandler("OPTION", value))
+		mux.HandleFunc(key, methodCheck("OPTION", makeHandler(value)))
 	}
 }
 
-// makeHander sets up a generic handler function for http
-func makeHandler(method string, fn RequestHandler) http.HandlerFunc {
+func methodCheck(method string, h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Check that the request method matches the one specified
 		if strings.ToUpper(method) != strings.ToUpper(r.Method) {
 			http.Error(w, "Not found", http.StatusNotFound)
 			return
 		}
+	}
+}
+
+// makeHander sets up a generic handler function for http
+func makeHandler(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// // Check that the request method matches the one specified
+		// if strings.ToUpper(method) != strings.ToUpper(r.Method) {
+		// 	http.Error(w, "Not found", http.StatusNotFound)
+		// 	return
+		// }
 
 		//
 		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
@@ -167,9 +176,9 @@ func makeHandler(method string, fn RequestHandler) http.HandlerFunc {
 		// @todo: Add support to log to file (?)
 		fmt.Printf("[%s] %s\t%s: %s\n", time.Now().Format("2006-01-02 15:04:05.000000"), r.RemoteAddr, r.Method, r.URL.Path)
 
-		var response = Response{w}
-		var request = Request{R: r, DB: _db}
+		// var response = Response{w}
+		// var request = Request{R: r, DB: _db}
 
-		fn(response, request)
+		fn(w, r)
 	}
 }
