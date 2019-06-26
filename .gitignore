@@ -3,3 +3,5 @@ configs
 .vscode
 bin
 logs
+go.mod
+go.sum
