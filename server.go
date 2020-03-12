@@ -15,15 +15,17 @@ package fetch
 
 import (
 	"errors"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/fetchweb/fetch/core"
+	"github.com/fetchweb/fetch/pkg/core"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	config "github.com/micro/go-config"
-	"github.com/micro/go-config/source/file"
+	"gopkg.in/yaml.v2"
+
 	"golang.org/x/net/http2"
 )
 
@@ -43,11 +45,13 @@ type Server struct {
 }
 
 type DatabaseStruct struct {
-	Database string
-	Driver   string
-	Username string
-	Password string
-	Port     uint16
+	Database struct {
+		Database string
+		Driver   string
+		Username string
+		Password string
+		Port     uint16
+	}
 }
 
 // TODO: Finish manifest struct
@@ -82,29 +86,34 @@ func (server *Server) Setup() error {
 
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
-		configPath = "/config.json"
+		configPath = "/config.yml"
 	}
 
-	_config := config.NewConfig()
+	dat, err := ioutil.ReadFile(server.BaseDir + configPath)
+	if err != nil {
+		return err
+	}
 
-	fileSource := file.NewSource(
-		file.WithPath(server.BaseDir + configPath),
-	)
-	_config.Load(fileSource)
+	db := DatabaseStruct{}
+	yaml.Unmarshal(dat, &db)
 
-	server.Config = _config.Map()
+	// _config := config.NewConfig()
 
-	var database DatabaseStruct
+	// fileSource := file.NewSource(
+	// 	file.WithPath(server.BaseDir + configPath),
+	// )
+	// _config.Load(fileSource)
+
+	// server.Config = _config.Map()
+
 	// extract db from config into struct
-	_config.Get("database").Scan(&database)
+	// _config.Get("database").Scan(&database)
 
-	if database.Driver == "" || database.Database == "" {
+	if db.Database.Driver == "" || db.Database.Database == "" {
 		return errors.New("Missing database connection credentials")
 	}
 
-	var err error
-	_db, err = gorm.Open(database.Driver, core.JoinStrings(database.Username, ":", database.Password, "@/", database.Database, "?charset=utf8&parseTime=True&loc=Local"))
-
+	_db, err := gorm.Open(db.Database.Driver, core.JoinStrings(db.Database.Username, ":", db.Database.Password, "@/", db.Database.Database, "?charset=utf8&parseTime=True&loc=Local"))
 	if err != nil {
 		return err
 	}
