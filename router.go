@@ -8,28 +8,28 @@ import (
 	"time"
 )
 
-// http.HandlerFunc type is a placeholder for http.HandlerFunc
-// type http.HandlerFunc http.HandlerFunc
+// RequestHandler type is a placeholder for http.HandlerFunc
+type RequestHandler func(w Response, r Request)
 
 // Router struct to handle route registration
 type Router struct {
-	GetRegister    map[string]http.HandlerFunc
-	HeadRegister   map[string]http.HandlerFunc
-	PostRegister   map[string]http.HandlerFunc
-	PutRegister    map[string]http.HandlerFunc
-	DeleteRegister map[string]http.HandlerFunc
-	OptionRegister map[string]http.HandlerFunc
+	GetRegister    map[string]RequestHandler
+	HeadRegister   map[string]RequestHandler
+	PostRegister   map[string]RequestHandler
+	PutRegister    map[string]RequestHandler
+	DeleteRegister map[string]RequestHandler
+	OptionRegister map[string]RequestHandler
 }
 
 // NewRouter creates a new instance of the router
 func NewRouter() *Router {
 	_router := &Router{}
-	_router.GetRegister = make(map[string]http.HandlerFunc)
-	_router.HeadRegister = make(map[string]http.HandlerFunc)
-	_router.PostRegister = make(map[string]http.HandlerFunc)
-	_router.PutRegister = make(map[string]http.HandlerFunc)
-	_router.DeleteRegister = make(map[string]http.HandlerFunc)
-	_router.OptionRegister = make(map[string]http.HandlerFunc)
+	_router.GetRegister = make(map[string]RequestHandler)
+	_router.HeadRegister = make(map[string]RequestHandler)
+	_router.PostRegister = make(map[string]RequestHandler)
+	_router.PutRegister = make(map[string]RequestHandler)
+	_router.DeleteRegister = make(map[string]RequestHandler)
+	_router.OptionRegister = make(map[string]RequestHandler)
 	return _router
 }
 
@@ -41,7 +41,7 @@ func Init(router *Router) {
 }
 
 // Get registers a GET request route
-func (router *Router) Get(route string, h http.HandlerFunc) error {
+func (router *Router) Get(route string, h RequestHandler) error {
 	Init(router)
 
 	_, ok := router.GetRegister[route]
@@ -54,7 +54,7 @@ func (router *Router) Get(route string, h http.HandlerFunc) error {
 }
 
 // Head registers a HEAD request route
-func (router *Router) Head(route string, h http.HandlerFunc) error {
+func (router *Router) Head(route string, h RequestHandler) error {
 	Init(router)
 
 	_, ok := router.HeadRegister[route]
@@ -67,7 +67,7 @@ func (router *Router) Head(route string, h http.HandlerFunc) error {
 }
 
 // Post registers a POST request route
-func (router *Router) Post(route string, h http.HandlerFunc) error {
+func (router *Router) Post(route string, h RequestHandler) error {
 	Init(router)
 
 	_, ok := router.PostRegister[route]
@@ -80,7 +80,7 @@ func (router *Router) Post(route string, h http.HandlerFunc) error {
 }
 
 // Put registers a PUT request route
-func (router *Router) Put(route string, h http.HandlerFunc) error {
+func (router *Router) Put(route string, h RequestHandler) error {
 	Init(router)
 
 	_, ok := router.PutRegister[route]
@@ -93,7 +93,7 @@ func (router *Router) Put(route string, h http.HandlerFunc) error {
 }
 
 // Delete registers a DELETE request route
-func (router *Router) Delete(route string, h http.HandlerFunc) error {
+func (router *Router) Delete(route string, h RequestHandler) error {
 	Init(router)
 
 	_, ok := router.DeleteRegister[route]
@@ -106,7 +106,7 @@ func (router *Router) Delete(route string, h http.HandlerFunc) error {
 }
 
 // Options registers a Options request route
-func (router *Router) Options(route string, h http.HandlerFunc) error {
+func (router *Router) Options(route string, h RequestHandler) error {
 	Init(router)
 
 	_, ok := router.OptionRegister[route]

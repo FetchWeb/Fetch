@@ -8,6 +8,6 @@ import (
 
 // Request type is a placeholder for *http.Request
 type Request struct {
-	R  *http.Request
+	*http.Request
 	DB *gorm.DB
 }

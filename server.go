@@ -95,7 +95,7 @@ func (server *Server) Setup() error {
 		return errors.New("Missing database connection credentials")
 	}
 
-	DB, err := gorm.Open(db.Database.Driver, core.JoinStrings(db.Database.Username, ":", db.Database.Password, "@/", db.Database.Database, "?charset=utf8&parseTime=True&loc=Local"))
+	_db, err := gorm.Open(db.Database.Driver, core.JoinStrings(db.Database.Username, ":", db.Database.Password, "@/", db.Database.Database, "?charset=utf8&parseTime=True&loc=Local"))
 	if err != nil {
 		return err
 	}
