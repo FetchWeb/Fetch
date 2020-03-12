@@ -11,4 +11,5 @@ require (
 	github.com/onsi/gomega v1.4.2
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	golang.org/x/net v0.0.0-20190327214358-63eda1eb0650
+	gopkg.in/yaml.v2 v2.2.8
 )
